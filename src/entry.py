@@ -75,6 +75,12 @@ def analysis_entry(project_id, instance_id, output_dir, start_time, end_time, du
         },
         {
             "category": "SQL",
+            "title": "SQL with Most IO Wait Time(Meta)",
+            "figure_html": HotspotsReport.plotly_fragment(sql_perquery_io_time_metrics(metrics)),
+            "notes": ["Often the symptom from another long-running SQL query holding the lock"],
+        },
+        {
+            "category": "SQL",
             "title": "SQL with Most Lock Wait Time(Meta)",
             "figure_html": HotspotsReport.plotly_fragment(sql_perquery_lock_time_metrics(metrics)),
             "notes": ["Often the symptom from another long-running SQL query holding the lock"],
