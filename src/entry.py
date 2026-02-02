@@ -48,7 +48,7 @@ def analysis_entry(project_id, instance_id, output_dir, start_time, end_time, du
 
     report = HotspotsReport(
         version=config.VERSION,
-        report_title_base="Google Cloud SQL edition",
+        report_title_base="Google Cloud Monitoring Edition",
         system_info={
             "timeframe": f"{start_time.strftime(time_fmt)} ~ {end_time.strftime(time_fmt)}",
             "system": f"{project_id}:{instance_id}",
