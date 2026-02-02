@@ -28,7 +28,7 @@ It cannot modify database configuration, execute SQL, drop tables, or change any
 No telemetry, metrics, or sensitive metadata are sent to external or third-party services.
 
 # Table of Contents
-- [Prerequisites](##prerequisites)
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Command notes](#command-notes)
@@ -52,8 +52,12 @@ pip install -e .
 Once installed, the `pshs` console script is available:
 
 ```bash
-pshs generate PROJECT_ID INSTANCE_ID OUTPUT_DIR --start-time 2026-01-01T14:00 duration-hours 3
+pshs generate PROJECT_ID INSTANCE_ID OUTPUT_DIR --start-time 2026-01-01T14:00 --duration-hours 3
 ```
+> [!TIP]  
+> - Please replace `PROJECT_ID`, `INSTANCE_ID`, `OUTPUT_DIR` with the actual value.  
+> - `--start-time` is using UTC time zone.  
+> - If you set `--duration-hours` to 24 or above, you're encourage to change `GROOUP_BY_MINUTES` in `config.py` to a bigger value for better visualization
 
 # Command notes
 
