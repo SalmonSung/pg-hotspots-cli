@@ -167,6 +167,7 @@ class HotspotsReport:
 
         page_title = f"PostgreSQL Hotspots {self.version}".strip()
 
+
         rendered = tmpl.render(
             page_title=page_title,
             report_title_base=self.report_title_base,
