@@ -61,10 +61,12 @@ class HotspotsReport:
         version: str,
         system_info: Dict[str, str],
         report_title_base: str = "PostgreSQL Hotspots",
+        report_type: str = "General Report"
     ) -> None:
         self.version = str(version)
         self.system_info = {str(k): str(v) for k, v in system_info.items()}
         self.report_title_base = str(report_title_base)
+        self.report_type = str(report_type)
         self._figures: List[FigureEntry] = []
 
     def add_figure(self, entry: FigureEntry | Dict[str, Any]) -> str:
@@ -163,11 +165,12 @@ class HotspotsReport:
         # figures_index_json is used by JS for menus/dropdowns
         figures_index_json = _to_json([{"id": f["id"], "title": f["title"], "category": f["category"]} for f in figures])
 
-        page_title = f"{self.report_title_base} {self.version}".strip()
+        page_title = f"PostgreSQL Hotspots {self.version}".strip()
 
         rendered = tmpl.render(
             page_title=page_title,
             report_title_base=self.report_title_base,
+            report_type=self.report_type,
             version=self.version,
             system_info_items=[(escape(k), escape(v)) for (k, v) in system_info_items],
             categories=categories,
