@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from metrics import CloudSQLMetrics, PerqueryLockTimeMetric, PerqueryLatencyMetric, PerqueryIOTimeMetric
 import config as config
+from utils import write_table_txt
 
 PALETTE_20 = [
     "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
@@ -95,11 +96,25 @@ def sql_perquery_latency_metrics(metrics: CloudSQLMetrics) -> go.Figure:
     for i, (key, _item, _total_us) in enumerate(kept):
         color_map[key] = PALETTE_20[i % len(PALETTE_20)]
 
+    txts: list[dict] = []
     for query_hash, item, total_latency_ms in kept:
         pie_labels.append(query_hash)
         pie_values_ms.append(total_latency_ms)
         custom_data.append([_format_sql_for_hover(item.querystring), item.database, item.user])
         pie_colors.append(color_map[query_hash])
+
+        txts.append(
+            {
+                "SQL Hash": query_hash,
+                "Total Latency": str(total_latency_ms) + " ms",
+                "DB": item.database,
+                "User": item.user,
+                "SQL": item.querystring,
+            }
+        )
+
+    columns_name = ["SQL Hash", "Total Latency", "DB", "User", "SQL"]
+    write_table_txt(columns_name, txts, "top_latency_sql.txt")
 
     pie_labels.append("Others")
     pie_values_ms.append(rest)

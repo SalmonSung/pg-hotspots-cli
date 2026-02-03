@@ -8,6 +8,7 @@ import click
 import logging
 import google.auth
 from google.auth.exceptions import DefaultCredentialsError
+import config
 
 
 def bytes_to_unit(value_bytes: float, unit: str = "GiB") -> float:
@@ -137,3 +138,32 @@ def parse_utc_minute(value: Optional[str]) -> Optional[datetime]:
         ) from e
 
     return dt.replace(tzinfo=timezone.utc)
+
+def write_table_txt(columns: list[str], rows: list[dict], filename: str) -> None:
+    # Determine column widths (max of header vs values)
+    widths = {}
+    for col in columns:
+        max_len = len(col)
+        for row in rows:
+            val = str(row.get(col, "")) if row.get(col) is not None else ""
+            max_len = max(max_len, len(val))
+        widths[col] = max_len
+
+    def format_row(values):
+        return " | ".join(f"{v:<{widths[c]}}" for v, c in zip(values, columns))
+
+    file_path = config.OUTPUT_DIR_PATH / filename
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        # Header
+        f.write(format_row(columns) + "\n")
+
+        # Separator
+        f.write(
+            " | ".join("-" * widths[col] for col in columns) + "\n"
+        )
+
+        # Rows
+        for row in rows:
+            values = [str(row.get(col, "")) if row.get(col) is not None else "" for col in columns]
+            f.write(format_row(values) + "\n")

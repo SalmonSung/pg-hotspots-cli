@@ -253,9 +253,4 @@ def general_database_overview(metrics: CloudSQLMetrics) -> go.Figure:
             y=-0.10
         ))
 
-    # --- Write .txt ---
-    example_path = config.OUTPUT_DIR_PATH / "general_database_overview.txt"
-    with example_path.open("w", encoding="utf-8") as f:
-        f.write("Hello")
-
     return fig

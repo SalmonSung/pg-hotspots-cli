@@ -3572,3 +3572,36 @@ connector: <aiohttp.connector.TCPConnector object at 0x0000027002413620>
 2026-02-02 | 22:19:38.544 | INFO | ThreadPoolExecutor-0_4 | Fetched 1 time series for WAL - Inserted Bytes Count
 2026-02-02 | 22:19:38.549 | INFO | ThreadPoolExecutor-0_12 | Returning 360 Memory - Quota
 2026-02-02 | 22:19:38.564 | INFO | ThreadPoolExecutor-0_13 | Returning 3 types of Memory - components
+2026-02-03 | 21:25:53.392 | INFO | MainThread |  ***** PostgreSQL Hotspots 0.1.2 starts *****
+2026-02-03 | 21:25:54.633 | INFO | MainThread | Application Default Credentials already configured.
+2026-02-03 | 21:25:54.633 | INFO | MainThread | Project: psql-hotspots
+2026-02-03 | 21:25:57.273 | WARNING | Thread-13 (_run) | Connection pool is full, discarding connection: oauth2.googleapis.com. Connection pool size: 10
+2026-02-03 | 21:25:57.283 | WARNING | Thread-17 (_run) | Connection pool is full, discarding connection: oauth2.googleapis.com. Connection pool size: 10
+2026-02-03 | 21:25:57.285 | WARNING | Thread-15 (_run) | Connection pool is full, discarding connection: oauth2.googleapis.com. Connection pool size: 10
+2026-02-03 | 21:25:57.298 | WARNING | Thread-1 (_run) | Connection pool is full, discarding connection: oauth2.googleapis.com. Connection pool size: 10
+2026-02-03 | 21:25:57.726 | INFO | ThreadPoolExecutor-0_1 | Fetched 12 time series for perquery latencies
+2026-02-03 | 21:25:57.809 | INFO | ThreadPoolExecutor-0_1 | Returning 12 perquery latency metrics (unique query/user/location/db buckets)
+2026-02-03 | 21:25:57.920 | INFO | ThreadPoolExecutor-0_12 | Fetched 1 time series for Memory - Quota
+2026-02-03 | 21:25:57.924 | INFO | ThreadPoolExecutor-0_12 | Returning 360 Memory - Quota
+2026-02-03 | 21:25:57.925 | INFO | ThreadPoolExecutor-0_11 | Fetched 6 time series for Disk - bytes used by type
+2026-02-03 | 21:25:57.936 | INFO | ThreadPoolExecutor-0_11 | Returning 6 types of Disk - bytes used by type
+2026-02-03 | 21:25:57.936 | INFO | ThreadPoolExecutor-0_8 | Fetched 1 time series for Disk - Quota
+2026-02-03 | 21:25:57.941 | INFO | ThreadPoolExecutor-0_8 | Returning 360 Disk - Quota
+2026-02-03 | 21:25:57.941 | INFO | ThreadPoolExecutor-0_7 | Fetched 1 time series for CPU - Utilization
+2026-02-03 | 21:25:57.946 | INFO | ThreadPoolExecutor-0_7 | Returning 360 CPU - Utilization
+2026-02-03 | 21:25:57.947 | INFO | ThreadPoolExecutor-0_13 | Fetched 3 time series for Memory - components
+2026-02-03 | 21:25:57.962 | INFO | ThreadPoolExecutor-0_13 | Returning 3 types of Memory - components
+2026-02-03 | 21:25:57.963 | INFO | ThreadPoolExecutor-0_9 | Fetched 1 time series for Disk - utilization
+2026-02-03 | 21:25:57.967 | INFO | ThreadPoolExecutor-0_9 | Returning 360 Disk - utilization
+2026-02-03 | 21:25:57.968 | INFO | ThreadPoolExecutor-0_10 | Fetched 1 time series for Disk - Write Bytes
+2026-02-03 | 21:25:57.973 | INFO | ThreadPoolExecutor-0_10 | Returning 360 Disk - Write Bytes
+2026-02-03 | 21:25:57.974 | INFO | ThreadPoolExecutor-0_2 | Fetched 24 time series for perquery IO time
+2026-02-03 | 21:25:58.018 | INFO | ThreadPoolExecutor-0_3 | Fetched 1 time series for WAL - Flushed Bytes Count
+2026-02-03 | 21:25:58.091 | INFO | ThreadPoolExecutor-0_2 | Returning 24 perquery IO time metrics (unique query_hash/io_type/db/user buckets)
+2026-02-03 | 21:25:58.113 | INFO | ThreadPoolExecutor-0_6 | Fetched 1 time series for CPU - Usage time
+2026-02-03 | 21:25:58.115 | INFO | ThreadPoolExecutor-0_0 | Fetched 36 time series for perquery lock time
+2026-02-03 | 21:25:58.120 | INFO | ThreadPoolExecutor-0_6 | Returning 360 CPU - Usage time
+2026-02-03 | 21:25:58.120 | INFO | ThreadPoolExecutor-0_4 | Fetched 1 time series for WAL - Inserted Bytes Count
+2026-02-03 | 21:25:58.194 | INFO | ThreadPoolExecutor-0_5 | Fetched 9 time series for Network - PostgreSQL num of backends by state
+2026-02-03 | 21:25:58.233 | INFO | ThreadPoolExecutor-0_5 | Returning 9 PostgreSQL num of backends by state metrics (state/database/region)
+2026-02-03 | 21:25:58.321 | INFO | ThreadPoolExecutor-0_0 | Returning 12 perquery lock time metrics (unique query/user/location/db buckets)

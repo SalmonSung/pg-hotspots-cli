@@ -69,8 +69,8 @@ def analysis_entry(project_id, instance_id, output_dir, start_time, end_time, du
             "category": "SQL",
             "title": "SQL with Most Latency Time",
             "figure_html": HotspotsReport.plotly_fragment(sql_perquery_latency_metrics(metrics)),
-            "notes": ["[[Open full analysis|general_database_overview.txt]]",
-                      "general_database_overview.txt",
+            "notes": ["[[Top Latency SQL Output|top_latency_sql.txt]]",
+                      "top_latency_sql.txt",
                       "One commit should <= 10 ms"],
         },
         {
