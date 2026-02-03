@@ -1,3 +1,0 @@
-data
-figure_logic
-learning
