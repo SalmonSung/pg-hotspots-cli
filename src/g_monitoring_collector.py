@@ -692,6 +692,89 @@ class GMonitoringCollector:
 
         return result
 
+    def load_psql_transaction_count(self) -> list[PSQLTransactionCountMetric]:
+        client = self._monitoring_client
+        project_name = f"projects/{self.project_id}"
+        metric_type = "cloudsql.googleapis.com/database/postgresql/transaction_count"
+
+        start_time, end_time = self.get_start_end_time()
+
+        request = {
+            "name": project_name,
+            "filter": (
+                f'metric.type="{metric_type}" '
+                f'AND resource.type="cloudsql_database" '
+                f'AND resource.labels.database_id="{self.project_id}:{self.instance_id}" '
+            ),
+            "interval": {"start_time": start_time, "end_time": end_time},
+            "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+        }
+
+        logging.debug(
+            "Loading PostgreSQL transaction count (project_id=%s, instance_id=%s, metric_type=%s)",
+            self.project_id,
+            self.instance_id,
+            metric_type,
+        )
+        logging.debug("Time interval: start=%s end=%s", start_time, end_time)
+        logging.debug("Cloud Monitoring filter: %s", request["filter"])
+
+        # IMPORTANT: materialize the pager once; otherwise a second loop sees nothing.
+        series_list = list(client.list_time_series(request=request))
+        logging.info("Fetched %d time series for PostgreSQL transaction count", len(series_list))
+
+        if not series_list:
+            return [PSQLTransactionCountMetric(
+                transaction_type="No Data",
+                database="No Data",
+                psql_transaction_count=TimeSeries(unit="counts"),
+            )]
+
+        # Group by identifying labels (so each unique transaction_type/database becomes one object)
+        grouped: Dict[Tuple[str, str], PSQLTransactionCountMetric] = {}
+
+        for ts in series_list:
+            mlabels = dict(ts.metric.labels)
+            rlabels = dict(ts.resource.labels)
+
+            transaction_type = mlabels.get("transaction_type")
+            database = mlabels.get("database")
+
+            key = (
+                transaction_type or "",
+                database or "",
+            )
+
+            metric_obj = grouped.get(key)
+            if metric_obj is None:
+                metric_obj = PSQLTransactionCountMetric(
+                    transaction_type=transaction_type,
+                    database=database,
+                    psql_transaction_count=TimeSeries(
+                        unit="counts",
+                    )
+                )
+                grouped[key] = metric_obj
+
+            points = sorted(
+                ts.points,
+                key=lambda p: (p.interval.end_time or p.interval.start_time)
+            )
+
+            for p in points:
+                dt = p.interval.end_time or p.interval.start_time
+                dt = dt.replace(second=0, microsecond=0)
+                metric_obj.psql_transaction_count.add(dt, p.value.int64_value)
+
+        result = list(grouped.values())
+
+        logging.info(
+            "Returning %d PostgreSQL transaction count (state/database/region)",
+            len(result),
+        )
+
+        return result
+
     def load_cpu_usage_time(self) -> TimeSeries:
         client = self._monitoring_client
         project_name = f"projects/{self.project_id}"
@@ -958,6 +1041,112 @@ class GMonitoringCollector:
 
         return results
 
+    def load_disk_read_ops_count(self) -> TimeSeries:
+        client = self._monitoring_client
+        project_name = f"projects/{self.project_id}"
+        metric_type = "cloudsql.googleapis.com/database/disk/read_ops_count"
+
+        start_time, end_time = self.get_start_end_time()
+        request = {
+            "name": project_name,
+            "filter": (
+                f'metric.type="{metric_type}" '
+                f'AND resource.type="cloudsql_database" '
+                f'AND resource.labels.database_id="{self.project_id}:{self.instance_id}" '
+            ),
+            "interval": {"start_time": start_time, "end_time": end_time},
+            "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+        }
+
+        logging.debug(
+            "Loading Disk - Read Ops Count (project_id=%s, instance_id=%s, metric_type=%s)",
+            self.project_id,
+            self.instance_id,
+            metric_type,
+        )
+        logging.debug("Time interval: start=%s end=%s", start_time, end_time)
+        logging.debug("Cloud Monitoring filter: %s", request["filter"])
+
+        # IMPORTANT: materialize the pager once; otherwise a second loop sees nothing.
+        series_list = list(client.list_time_series(request=request))
+        logging.info("Fetched %d time series for Disk - Read Ops Count", len(series_list))
+
+        if not series_list:
+            return TimeSeries(unit="count")
+
+        results: TimeSeries = TimeSeries(unit="count")
+
+        for ts in series_list:
+            points = sorted(
+                ts.points,
+                key=lambda p: (p.interval.end_time or p.interval.start_time)
+            )
+
+            for p in points:
+                dt = p.interval.end_time or p.interval.start_time
+                dt = dt.replace(second=0, microsecond=0)
+                results.add(dt, p.value.int64_value)
+
+        logging.info(
+            "Returning %d Disk - Read Ops Count",
+            len(results.values),
+        )
+
+        return results
+
+    def load_disk_write_ops_count(self) -> TimeSeries:
+        client = self._monitoring_client
+        project_name = f"projects/{self.project_id}"
+        metric_type = "cloudsql.googleapis.com/database/disk/write_ops_count"
+
+        start_time, end_time = self.get_start_end_time()
+        request = {
+            "name": project_name,
+            "filter": (
+                f'metric.type="{metric_type}" '
+                f'AND resource.type="cloudsql_database" '
+                f'AND resource.labels.database_id="{self.project_id}:{self.instance_id}" '
+            ),
+            "interval": {"start_time": start_time, "end_time": end_time},
+            "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+        }
+
+        logging.debug(
+            "Loading Disk - Write Ops Count (project_id=%s, instance_id=%s, metric_type=%s)",
+            self.project_id,
+            self.instance_id,
+            metric_type,
+        )
+        logging.debug("Time interval: start=%s end=%s", start_time, end_time)
+        logging.debug("Cloud Monitoring filter: %s", request["filter"])
+
+        # IMPORTANT: materialize the pager once; otherwise a second loop sees nothing.
+        series_list = list(client.list_time_series(request=request))
+        logging.info("Fetched %d time series for Disk - Write Ops Count", len(series_list))
+
+        if not series_list:
+            return TimeSeries(unit="count")
+
+        results: TimeSeries = TimeSeries(unit="count")
+
+        for ts in series_list:
+            points = sorted(
+                ts.points,
+                key=lambda p: (p.interval.end_time or p.interval.start_time)
+            )
+
+            for p in points:
+                dt = p.interval.end_time or p.interval.start_time
+                dt = dt.replace(second=0, microsecond=0)
+                results.add(dt, p.value.int64_value)
+
+        logging.info(
+            "Returning %d Disk - Write Ops Count",
+            len(results.values),
+        )
+
+        return results
+
     def load_disk_bytes_used_by_type(self) -> Dict[str, TimeSeries]:
         client = self._monitoring_client
         project_name = f"projects/{self.project_id}"
@@ -1133,6 +1322,7 @@ class GMonitoringCollector:
             "wal_flushed_bytes_metrics": self.load_wal_flushed_bytes_count,
             "wal_inserted_bytes_metrics": self.load_wal_inserted_bytes_count,
             "psql_num_backends_by_state_metrics": self.load_psql_num_backends_by_state,
+            "psql_transaction_count": self.load_psql_transaction_count,
             "cpu_usage_time": self.load_cpu_usage_time,
             "cpu_utilization": self.load_cpu_utilization,
             "disk_quota": self.load_disk_quota,
@@ -1141,6 +1331,8 @@ class GMonitoringCollector:
             "disk_bytes_used_by_type": self.load_disk_bytes_used_by_type,
             "memory_quota": self.load_memory_quota,
             "memory_components": self.load_memory_components,
+            "disk_read_ops": self.load_disk_read_ops_count,
+            "disk_write_ops": self.load_disk_write_ops_count
 
         }
 

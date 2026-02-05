@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from metrics import CloudSQLMetrics
-from utils import bytes_to_unit
+from utils import bytes_to_unit, get_disk_iops_tp
 
 
 
@@ -24,8 +24,275 @@ def _safe_xy(ts) -> Tuple[List[datetime], List[float]]:
     except Exception:
         return [], []
 
+def disk_overview(metrics: CloudSQLMetrics) -> go.Figure:
+    # --- Make Fig ---
+
+    fig = make_subplots(
+        rows=3,
+        cols=1,
+        specs=[
+            [{"type": "xy", "secondary_y": True}],
+            [{"type": "xy"}],
+            [{"type": "xy"}],
+        ],
+        row_heights=[0.3, 0.35, 0.35],
+        column_widths=[1],
+        horizontal_spacing=0.08,
+        vertical_spacing=0.04,
+        subplot_titles=[
+            "Disk Usage",
+            "Disk Read/Write Ops Count",
+            "Disk Throughput"
+        ]
+    )
+
+    # --- Figure I: Disk Space Usage---
+    x_ts = metrics.disk_utilization.timestamps()
+
+    for d_type, values in metrics.disk_bytes_used_by_type.items():
+        fig.add_trace(
+            go.Scatter(
+                x=values.timestamps(),
+                y=[bytes_to_unit(v) for v in values.data()],
+                name=d_type,
+                mode="lines",
+                # line=dict(color=CONNECTION_STATE_COLORS[state]),
+                stackgroup="one",
+                hovertemplate=(
+                    "<b>%{y:.2f} GiB</b>"
+                ),
+                showlegend=False,
+                visible=True,
+            ),
+            row=1, col=1,
+        )
+
+    fig.add_trace(
+        go.Scatter(
+            x=x_ts,
+            y=[bytes_to_unit(v) for v in metrics.disk_quota.data()],
+            mode="lines",
+            line=dict(
+                color="lightcoral",
+                dash="dash",
+                width=2
+            ),
+            hovertemplate=(
+                "<b>Time:</b> %{x|%H:%M} - "
+                "%{x|%Y/%m/%d} - "
+                "%{x|%a}<br>"
+                "<b>%{y:.2f} GiB</b><extra></extra>"
+            )
+            ,
+            showlegend=False,
+        ),
+        secondary_y=False,
+        row=1, col=1
+    )
+
+    fig.add_annotation(
+        x=x_ts[-15],
+        y=bytes_to_unit(metrics.disk_quota.data()[-1]),
+        text="Quota",
+        showarrow=False,
+        font=dict(
+            color="white",
+            size=12,
+        ),
+        bgcolor="lightcoral",  # 填滿背景
+        bordercolor="lightcoral",  # 邊框顏色
+        borderwidth=0.5,  # 邊框粗細
+        borderpad=1,  # 文字與框的內距
+        xanchor="left",
+        yanchor="bottom",
+        row=1,col=1,
+    )
+
+    # --- Figure II: Disk IOPs---
+
+
+    # --- Formatting ---
+    fig.update_xaxes(
+        showticklabels=False,
+        ticks="",
+        row=1, col=1,
+    )
+    fig.update_xaxes(
+        showticklabels=False,
+        ticks="",
+        row=2, col=1,
+    )
+    fig.update_xaxes(
+        tickformat="%H:%M<br>%Y/%m/%d<br>%a",
+        row=3, col=1
+    )
+
+
+    # fig.update_yaxes(
+    #     title_text="CPU Usage Time(CPU-seconds)",
+    #     title_font=dict(color="lightblue"),
+    #     # tickfont=dict(color="grey"),
+    #     secondary_y=True,
+    #     row=1, col=1
+    # )
+
+    fig.update_yaxes(
+        title_text="GiB",
+        row=1, col=1
+    )
+
+    fig.update_yaxes(
+        title_text="GiB",
+        row=3, col=1
+    )
+
+
+    fig.update_layout(
+        hovermode="x",  # <- one hover box containing ALL traces at that x
+        hoverdistance=-1,
+        # hoverdistance=50,  # optional: how far from the cursor Plotly will look for points
+    )
+
+    fig.update_layout(
+        height=800,
+        margin=dict(l=20, r=20, t=60, b=120),
+        legend=dict(
+            orientation="h",
+            xanchor="left",
+            x=0.0,
+            yanchor="top",
+            y=-0.10
+        ))
+
+    return fig
+
+def disk_ops(metrics: CloudSQLMetrics) -> go.Figure:
+    fig = go.Figure()
+
+    tier = metrics.instance_details["tier"]
+    availability = metrics.instance_details["availability"]
+    disk_iops_tp = get_disk_iops_tp(tier, availability)
+    read_iops, write_iops = disk_iops_tp["max_iops_rw"]
+    read_iops, write_iops = read_iops*60, write_iops*60
+    x_ts = metrics.disk_write_ops.timestamps()
+
+
+
+    fig.add_trace(
+            go.Scatter(
+                x=x_ts,
+                y=metrics.disk_read_ops.data(),
+                name="read_ops",
+                mode="lines",
+                line=dict(color="lightblue"),
+                hovertemplate=(
+                    "<b>%{y}</b>"
+                ),
+                showlegend=False,
+                visible=True,
+            ),
+        )
+
+    fig.add_trace(
+            go.Scatter(
+                x=x_ts,
+                y=metrics.disk_write_ops.data(),
+                name="write_ops",
+                mode="lines",
+                line=dict(color="lightcoral"),
+                hovertemplate=(
+                    "<b>%{y}</b>"
+                ),
+                showlegend=False,
+                visible=True,
+            ),
+        )
+    fig.add_trace(
+        go.Scatter(
+            x=x_ts,
+            y=[read_iops] * len(x_ts),
+            mode="lines",
+            line=dict(
+                color="blue",
+                dash="dash",
+                width=2
+            ),
+            hovertemplate=(
+                "<b>%{y}</b><extra></extra>"
+            )
+            ,
+            showlegend=False,
+        ),
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_ts,
+            y=[write_iops] * len(x_ts),
+            mode="lines",
+            line=dict(
+                color="red",
+                dash="dash",
+                width=2
+            ),
+            hovertemplate=(
+                "<b>Time:</b> %{x|%H:%M} - "
+                "%{x|%Y/%m/%d} - "
+                "%{x|%a}<br>"
+                "<b>%{y}</b><extra></extra>"
+            )
+            ,
+            showlegend=False,
+        ),
+    )
+    # --- formatting ---
+    fig.add_annotation(
+        x=x_ts[-30],
+        y=read_iops,
+        text="Read max",
+        showarrow=False,
+        font=dict(
+            color="white",
+            size=12,
+        ),
+        bgcolor="blue",  # 填滿背景
+        bordercolor="blue",  # 邊框顏色
+        borderwidth=0.5,  # 邊框粗細
+        borderpad=1,  # 文字與框的內距
+        xanchor="left",
+        yanchor="bottom",
+    )
+    fig.add_annotation(
+        x=x_ts[-15],
+        y=write_iops,
+        text="Write max",
+        showarrow=False,
+        font=dict(
+            color="white",
+            size=12,
+        ),
+        bgcolor="red",  # 填滿背景
+        bordercolor="red",  # 邊框顏色
+        borderwidth=0.5,  # 邊框粗細
+        borderpad=1,  # 文字與框的內距
+        xanchor="left",
+        yanchor="bottom",
+    )
+    fig.update_xaxes(
+        tickformat="%H:%M<br>%Y/%m/%d<br>%a",
+    )
+    fig.update_yaxes(
+        title_text="Count",
+    )
+
+    fig.update_layout(
+        hovermode="x",  # <- one hover box containing ALL traces at that x
+        hoverdistance=-1,
+        height=300,
+    )
+    return fig
+
 def disk_usage_pie_overview(
-    metrics: "CloudSQLMetrics",
+    metrics: CloudSQLMetrics,
     title: str = "Cloud SQL Disk Usage (Current + Trend)",
 ) -> go.Figure:
     """
@@ -201,137 +468,3 @@ def disk_usage_pie_overview(
 
     return fig
 
-
-def disk_io_and_usage_timeseries(
-    metrics: CloudSQLMetrics,
-    title: str = "Cloud SQL Disk IO Overview",
-) -> go.Figure:
-    """
-    Two-row figure:
-
-    Row 1:
-      - read/write bytes (GiB per interval) as lines
-      - disk_utilization as light-blue bars on secondary y-axis
-
-    Row 2:
-      - read/write ops as lines
-      - disk_utilization as light-blue bars on secondary y-axis
-    """
-    fig = make_subplots(
-        rows=2,
-        cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.10,
-        specs=[
-            [{"type": "xy", "secondary_y": True}],
-            [{"type": "xy", "secondary_y": True}],
-        ],
-        subplot_titles=(
-            "Disk IO bytes (read/write) + utilization (bar)",
-            "Disk IO ops (read/write) + utilization (bar)",
-        ),
-    )
-
-    # Utilization (used in both rows)
-    x_util = metrics.disk_utilization.timestamps()
-    y_util = metrics.disk_utilization.data()
-
-    # --- Row 1: bytes (convert to GiB for y) + utilization bars
-    fig.add_trace(
-        go.Scatter(
-            x=metrics.disk_read_bytes.timestamps(),
-            y=[bytes_to_unit(v, "GiB") for v in metrics.disk_read_bytes.data()],
-            mode="lines",
-            name="read_bytes_count",
-            hovertemplate="%{x}<br>%{y:.4f} GiB/interval<extra></extra>",
-        ),
-        row=1,
-        col=1,
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=metrics.disk_write_bytes.timestamps(),
-            y=[bytes_to_unit(v, "GiB") for v in metrics.disk_write_bytes.data()],
-            mode="lines",
-            name="write_bytes_count",
-            hovertemplate="%{x}<br>%{y:.4f} GiB/interval<extra></extra>",
-        ),
-        row=1,
-        col=1,
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Bar(
-            x=x_util,
-            y=y_util,
-            name="disk_utilization",
-            opacity=0.35,
-            marker_color="lightblue",
-            hovertemplate="%{x}<br>%{y:.3f}<extra></extra>",
-        ),
-        row=1,
-        col=1,
-        secondary_y=True,
-    )
-
-    # --- Row 2: ops + utilization bars (same series, no legend duplicate)
-    fig.add_trace(
-        go.Scatter(
-            x=metrics.disk_read_ops.timestamps(),
-            y=metrics.disk_read_ops.data(),
-            mode="lines",
-            name="read_ops_count",
-            hovertemplate="%{x}<br>%{y:.0f} ops/interval<extra></extra>",
-        ),
-        row=2,
-        col=1,
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=metrics.disk_write_ops.timestamps(),
-            y=metrics.disk_write_ops.data(),
-            mode="lines",
-            name="write_ops_count",
-            hovertemplate="%{x}<br>%{y:.0f} ops/interval<extra></extra>",
-        ),
-        row=2,
-        col=1,
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Bar(
-            x=x_util,
-            y=y_util,
-            name="disk_utilization (bar)",
-            opacity=0.35,
-            marker_color="lightblue",
-            showlegend=False,
-            hovertemplate="%{x}<br>%{y:.3f}<extra></extra>",
-        ),
-        row=2,
-        col=1,
-        secondary_y=True,
-    )
-
-    # Axes + layout
-    fig.update_yaxes(title_text="GiB / interval", row=1, col=1, secondary_y=False)
-    fig.update_yaxes(title_text="Utilization (ratio)", row=1, col=1, secondary_y=True, range=[0, 1])
-
-    fig.update_yaxes(title_text="Ops / interval", row=2, col=1, secondary_y=False)
-    fig.update_yaxes(title_text="Utilization (ratio)", row=2, col=1, secondary_y=True, range=[0, 1])
-
-    fig.update_layout(
-        title_text=title,
-        height=780,
-        margin=dict(l=30, r=30, t=90, b=30),
-        barmode="overlay",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
-    )
-
-    return fig

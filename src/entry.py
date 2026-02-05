@@ -6,6 +6,7 @@ from figure_logic.wal_related import *
 from figure_logic.network_related import *
 from figure_logic.disk_related import *
 from figure_logic.general_related import *
+from figure_logic.transaction_related import *
 from metrics import CloudSQLMetrics
 from hotspots_report import HotspotsReport
 from cloudsql_postgres import CloudSQLPostgres
@@ -91,10 +92,22 @@ def analysis_entry(project_id, instance_id, output_dir, start_time, end_time, du
             "figure_html": HotspotsReport.plotly_fragment(sql_perquery_lock_time_metrics(metrics)),
             "notes": ["Often the symptom from another long-running SQL query holding the lock"],
         },
+        # {
+        #     "category": "Disk",
+        #     "title": "Disk Overview(Meta)",
+        #     "figure_html": HotspotsReport.plotly_fragment(disk_overview(metrics)),
+        #     "notes": ["No Note at this stage"],
+        # },
         {
             "category": "Disk",
-            "title": "Disk Overview(Meta)",
-            "figure_html": HotspotsReport.plotly_fragment(disk_io_and_usage_timeseries(metrics)),
+            "title": "Disk Read/Write Count",
+            "figure_html": HotspotsReport.plotly_fragment(disk_ops(metrics)),
+            "notes": ["No Note at this stage"],
+        },
+        {
+            "category": "Transaction",
+            "title": "Transaction Ops Count",
+            "figure_html": HotspotsReport.plotly_fragment(transaction_ops(metrics)),
             "notes": ["No Note at this stage"],
         },
         {
