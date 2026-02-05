@@ -181,6 +181,12 @@ class PSQLNumBackendsByStateMetric:
     psql_num_backends_by_state: TimeSeries = field(default_factory=lambda: TimeSeries(unit="counts"))
 
 @dataclass
+class PSQLTransactionCountMetric:
+    transaction_type: Optional[str] = None
+    database: Optional[str] = None
+    psql_transaction_count: TimeSeries = field(default_factory=lambda: TimeSeries(unit="counts"))
+
+@dataclass
 class CloudSQLMetrics:
     """
     Collected metrics for a single Cloud SQL instance and time window.
@@ -196,6 +202,9 @@ class CloudSQLMetrics:
     )
     psql_num_backends_by_state_metrics: List[PSQLNumBackendsByStateMetric] = field(
         default_factory=PSQLNumBackendsByStateMetric
+    )
+    psql_transaction_count: List[PSQLTransactionCountMetric] = field(
+        default_factory=PSQLTransactionCountMetric
     )
 
     cpu_usage_time: TimeSeries = field(

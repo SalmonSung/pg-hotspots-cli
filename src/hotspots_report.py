@@ -165,7 +165,7 @@ class HotspotsReport:
         # figures_index_json is used by JS for menus/dropdowns
         figures_index_json = _to_json([{"id": f["id"], "title": f["title"], "category": f["category"]} for f in figures])
 
-        page_title = f"PostgreSQL Hotspots {self.version}".strip()
+        page_title = f"PostgreSQL Hotspots v{self.version}".strip()
 
 
         rendered = tmpl.render(
