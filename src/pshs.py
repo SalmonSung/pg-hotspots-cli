@@ -10,7 +10,6 @@ from datetime import datetime, timezone, timedelta
 import config as config
 from entry import analysis_entry
 from utils import ensure_adc_login, load_db_secret_list, parse_utc_minute
-from cloudsql_postgres import CloudSQLPostgres
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 

@@ -775,6 +775,89 @@ class GMonitoringCollector:
 
         return result
 
+    def load_psql_statements_executed_count(self) -> list[PSQLStatementsExecutedCountMetric]:
+        client = self._monitoring_client
+        project_name = f"projects/{self.project_id}"
+        metric_type = "cloudsql.googleapis.com/database/postgresql/statements_executed_count"
+
+        start_time, end_time = self.get_start_end_time()
+
+        request = {
+            "name": project_name,
+            "filter": (
+                f'metric.type="{metric_type}" '
+                f'AND resource.type="cloudsql_database" '
+                f'AND resource.labels.database_id="{self.project_id}:{self.instance_id}" '
+            ),
+            "interval": {"start_time": start_time, "end_time": end_time},
+            "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+        }
+
+        logging.debug(
+            "Loading PostgreSQL Statements Executed Count (project_id=%s, instance_id=%s, metric_type=%s)",
+            self.project_id,
+            self.instance_id,
+            metric_type,
+        )
+        logging.debug("Time interval: start=%s end=%s", start_time, end_time)
+        logging.debug("Cloud Monitoring filter: %s", request["filter"])
+
+        # IMPORTANT: materialize the pager once; otherwise a second loop sees nothing.
+        series_list = list(client.list_time_series(request=request))
+        logging.info("Fetched %d time series for PostgreSQL Statements Executed Count", len(series_list))
+
+        if not series_list:
+            return [PSQLStatementsExecutedCountMetric(
+                operation_type="No Data",
+                database="No Data",
+                psql_statements_executed_count=TimeSeries(unit="counts"),
+            )]
+
+        # Group by identifying labels (so each unique operation_type/database becomes one object)
+        grouped: Dict[Tuple[str, str], PSQLStatementsExecutedCountMetric] = {}
+
+        for ts in series_list:
+            mlabels = dict(ts.metric.labels)
+            rlabels = dict(ts.resource.labels)
+
+            transaction_type = mlabels.get("operation_type")
+            database = mlabels.get("database")
+
+            key = (
+                transaction_type or "",
+                database or "",
+            )
+
+            metric_obj = grouped.get(key)
+            if metric_obj is None:
+                metric_obj = PSQLStatementsExecutedCountMetric(
+                    operation_type=transaction_type,
+                    database=database,
+                    psql_statements_executed_count=TimeSeries(
+                        unit="counts",
+                    )
+                )
+                grouped[key] = metric_obj
+
+            points = sorted(
+                ts.points,
+                key=lambda p: (p.interval.end_time or p.interval.start_time)
+            )
+
+            for p in points:
+                dt = p.interval.end_time or p.interval.start_time
+                dt = dt.replace(second=0, microsecond=0)
+                metric_obj.psql_statements_executed_count.add(dt, p.value.int64_value)
+
+        result = list(grouped.values())
+
+        logging.info(
+            "Returning %d PostgreSQL Statements Executed Count (operation_type/database)",
+            len(result),
+        )
+
+        return result
+
     def load_cpu_usage_time(self) -> TimeSeries:
         client = self._monitoring_client
         project_name = f"projects/{self.project_id}"
@@ -1323,6 +1406,7 @@ class GMonitoringCollector:
             "wal_inserted_bytes_metrics": self.load_wal_inserted_bytes_count,
             "psql_num_backends_by_state_metrics": self.load_psql_num_backends_by_state,
             "psql_transaction_count": self.load_psql_transaction_count,
+            "psql_statements_executed_count_metrics": self.load_psql_statements_executed_count,
             "cpu_usage_time": self.load_cpu_usage_time,
             "cpu_utilization": self.load_cpu_utilization,
             "disk_quota": self.load_disk_quota,
@@ -1337,25 +1421,10 @@ class GMonitoringCollector:
         }
 
         data = {}
-        with ThreadPoolExecutor(max_workers=len(fetch_map)) as ex:
+        with ThreadPoolExecutor(max_workers=10) as ex:
             future_to_attr = {ex.submit(fn): attr for attr, fn in fetch_map.items()}
             for fut in as_completed(future_to_attr):
                 attr = future_to_attr[fut]
                 data[attr] = fut.result()
 
         return CloudSQLMetrics(**data)
-
-
-if __name__ == "__main__":
-    from utils import load_db_secret_list
-
-    db_secret = load_db_secret_list(r"C:\Users\kaiyi\Desktop\github\psql-cli\src\data\db-secrets.json")[0]
-    metric = GMonitoringCollector(db_secret["project_id"], db_secret["instance_id"], 1).generate_cloudsql_metrics()
-    # print(db_secret["project_id"])
-    print(metric.wal_flushed_bytes_metrics.wal_flushed_bytes_count.data())
-    # for item in metric.wal_flushed_bytes_metrics:
-    #     print(item)
-    #     print(item.database)
-    #     for i in item.perquery_count.data():
-    #         print(i)
-    #         break

@@ -157,7 +157,6 @@ class PerqueryIOTimeMetric:
     database: Optional[str] = None
     perquery_IO_time: TimeSeries = field(default_factory=lambda: TimeSeries(unit="us = microseconds"))
 
-
 @dataclass
 class WALFlushedBytesCountMetric:
     database_id: Optional[str] = None
@@ -187,6 +186,13 @@ class PSQLTransactionCountMetric:
     psql_transaction_count: TimeSeries = field(default_factory=lambda: TimeSeries(unit="counts"))
 
 @dataclass
+class PSQLStatementsExecutedCountMetric:
+    operation_type: Optional[str] = None
+    database: Optional[str] = None
+    psql_statements_executed_count: TimeSeries = field(default_factory=lambda: TimeSeries(unit="counts"))
+
+
+@dataclass
 class CloudSQLMetrics:
     """
     Collected metrics for a single Cloud SQL instance and time window.
@@ -205,6 +211,9 @@ class CloudSQLMetrics:
     )
     psql_transaction_count: List[PSQLTransactionCountMetric] = field(
         default_factory=PSQLTransactionCountMetric
+    )
+    psql_statements_executed_count_metrics: List[PSQLStatementsExecutedCountMetric] = field(
+        default_factory=PSQLStatementsExecutedCountMetric
     )
 
     cpu_usage_time: TimeSeries = field(

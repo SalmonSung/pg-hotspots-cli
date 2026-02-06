@@ -9,27 +9,10 @@ from figure_logic.general_related import *
 from figure_logic.transaction_related import *
 from metrics import CloudSQLMetrics
 from hotspots_report import HotspotsReport
-from cloudsql_postgres import CloudSQLPostgres
 import config as config
 
 from g_monitoring_collector import GMonitoringCollector
 from cloudsql_admin_collector import CloudSQLAdminCollector
-
-
-# MetricSpec + MetricsLoaderMP come from the ProcessPool version we wrote earlier
-# specs = [
-#     MetricSpec("cpu/utilization", "cloudsql.googleapis.com/database/cpu/utilization"),
-#     MetricSpec("cpu/reserved_cores", "cloudsql.googleapis.com/database/cpu/reserved_cores"),
-#     MetricSpec("cpu/usage_time", "cloudsql.googleapis.com/database/cpu/usage_time"),
-#     MetricSpec("disk/quota", "cloudsql.googleapis.com/database/disk/quota"),
-#     MetricSpec("disk/utilization", "cloudsql.googleapis.com/database/disk/utilization"),
-#     MetricSpec("disk/read_bytes", "cloudsql.googleapis.com/database/disk/read_bytes_count"),
-#     MetricSpec("disk/read_ops", "cloudsql.googleapis.com/database/disk/read_ops_count"),
-#     MetricSpec("disk/write_bytes", "cloudsql.googleapis.com/database/disk/write_bytes_count"),
-#     MetricSpec("disk/write_ops", "cloudsql.googleapis.com/database/disk/write_ops_count"),
-#     MetricSpec("disk/bytes_used", "cloudsql.googleapis.com/database/disk/bytes_used"),
-#     MetricSpec("disk/bytes_used_by_type", "cloudsql.googleapis.com/database/disk/bytes_used_by_data_type")
-# ]
 
 def analysis_entry(project_id, instance_id, output_dir, start_time, end_time, duration_hours):
     # start_time = datetime(2026, 1, 29, 20, 30, 0, tzinfo=timezone.utc)
@@ -112,6 +95,12 @@ def analysis_entry(project_id, instance_id, output_dir, start_time, end_time, du
             "category": "Transaction",
             "title": "Transaction Ops Count",
             "figure_html": HotspotsReport.plotly_fragment(transaction_ops(metrics)),
+            "notes": ["No Note at this stage"],
+        },
+        {
+            "category": "Transaction",
+            "title": "Statements Executed Count",
+            "figure_html": HotspotsReport.plotly_fragment(statements_executed_count(metrics)),
             "notes": ["No Note at this stage"],
         },
         {
