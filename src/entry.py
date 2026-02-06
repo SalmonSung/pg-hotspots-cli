@@ -101,7 +101,7 @@ def analysis_entry(project_id, instance_id, output_dir, start_time, end_time, du
             "category": "Transaction",
             "title": "Statements Executed Count",
             "figure_html": HotspotsReport.plotly_fragment(statements_executed_count(metrics)),
-            "notes": ["No Note at this stage"],
+            "notes": ["Utility is a category for all queries that is not define as SELECT, UPDATE, INSERT or DELETE. For instance, CREAT, DROP, etc. This is not an issue to avoid."],
         },
         {
             "category": "Network",
