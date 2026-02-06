@@ -8,7 +8,7 @@
 <p>
 
 [![GitHub Stars](https://img.shields.io/github/stars/SalmonSung/psql-cli?style=square)](https://github.com/SalmonSung/psql-cli/stargazers)
-[![Version](https://img.shields.io/badge/version-v1.2.0-4CAF50.svg)](https://github.com/SalmonSung/psql-cli)
+[![Version](https://img.shields.io/badge/version-v1.3.0-4CAF50.svg)](https://github.com/SalmonSung/psql-cli)
 
 
 </p> 
@@ -32,7 +32,8 @@
   - lock waits and contention
 
 and more...  
-<img width="1151" height="631" alt="image" src="https://github.com/user-attachments/assets/43f59c17-059f-4b62-b38b-2e9a5626e7cc" />
+<img width="1243" height="651" alt="image" src="https://github.com/user-attachments/assets/3d92c5c4-a46f-440b-ad2e-fca93e5de4af" />
+
 
 
 # Safety & Security
