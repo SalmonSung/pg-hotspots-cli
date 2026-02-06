@@ -32,6 +32,7 @@
   - lock waits and contention
 
 and more...  
+<img width="1151" height="631" alt="image" src="https://github.com/user-attachments/assets/43f59c17-059f-4b62-b38b-2e9a5626e7cc" />
 
 
 # Safety & Security
