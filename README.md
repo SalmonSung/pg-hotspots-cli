@@ -8,7 +8,7 @@
 <p>
 
 [![GitHub Stars](https://img.shields.io/github/stars/SalmonSung/psql-cli?style=square)](https://github.com/SalmonSung/psql-cli/stargazers)
-[![Version](https://img.shields.io/badge/version-v1.4.1-4CAF50.svg)](https://github.com/SalmonSung/psql-cli)
+[![Version](https://img.shields.io/badge/version-v1.4.2-4CAF50.svg)](https://github.com/SalmonSung/psql-cli)
 
 
 </p> 
